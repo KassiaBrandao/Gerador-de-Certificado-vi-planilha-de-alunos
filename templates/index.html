@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Certificados</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script>
+        function showLoader() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function hideLoader() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function showSuccessMessage() {
+            document.getElementById('success-message').style.display = 'block';
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            showLoader();
+
+            const formData = new FormData(event.target);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Erro ao gerar os certificados');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'certificados.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                hideLoader();
+                showSuccessMessage();
+            })
+            .catch(error => {
+                hideLoader();
+                alert(error.message);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de Certificados</h1>
+        <form onsubmit="handleFormSubmit(event)">
+            <label for="file">Selecione a planilha de alunos:</label>
+            <input type="file" name="file" id="file" required>
+            <button type="submit">Gerar Certificados</button>
+        </form>
+        <div id="success-message">Seus certificados foram gerados com sucesso!</div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <p>Seus certificados estão sendo gerados, aguarde...</p>
+        </div>
+    </div>
+</body>
+</html>
